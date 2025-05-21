@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Control de Stock - Medias</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h2{
+            color:#444;
+        }
+        input, select, button{
+            margin: 5px 0;
+            padding: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15pxM
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        .vendido {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Agregar modelo de Media</h2>
+    <input type="text" id="modelo" placeholder="Modelo">
+    <input type="text" id="nombre" placeholder="Nombre">
+    <input type="number" id="cantidad" placeholder="Cantidad" min="1">
+    <select id="ubicacion">
+        <option value="stock">Stock</option>
+        <option value="repuestas">Repuestas</option>
+    </select>
+    <button onclick="agregarMedia()">Agregar al stock</button>
+
+    <h2>Registrar venta</h2>
+    <select id="modeloVenta"></select>
+    <input type="number" id="cantidadVenta" placeholder="Cantidad vendida" min="1">
+    <button onclick="registrarVenta()">Vender</button>
+
+    <h2>Stock actual</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Modelo</th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Ubicacion</th>
+            </tr>
+        </thead>
+        <tbody id="tablaStock"></tbody>
+    </table>
+
+    <script>
+        let stock=JSON.parse(localStorage.getItem('stock')) || [];
+
+        function guardarStock() {
+            localStorage.setItem('stock', JSON.stringify(stock));
+        }
+
+        function renderizarStock() {
+            const tabla=document.getElementById('tablaStock');
+            const selectVenta=document.getElementById('modeloVenta');
+            tabla.innerHTML='';
+            selectVenta.innerHTML='';
+
+            stock.forEach((item, index) => {
+                const fila= `
+                    <tr>
+                        <td>${item.modelo}</td>
+                        <td>${item.nombre}</td>
+                        <td>${item.cantidad > 0 ? item.cantidad: '<span class="vendido">Agotado</span>'}</td>
+                        <td>${item.ubicacion}</td>
+                    </tr>`;
+                tabla.innerHTML+=fila;
+                
+                if (item.cantidad > 0){
+                    const opcion=document.createElement('option');
+                    opcion.value=index;
+                    opcion.textContent=`${item.color})`;
+                    selectVenta.appendChild(opcion);
+                }
+            });
+        }
+
+        function agregarMedia(){
+            const modelo=document.getElementById('modelo').value.trim();
+            const nombre=document.getElementById('nombre').value.trim();
+            const cantidad=parseInt(document.getElementById('cantidad').value);
+            const ubicacion=document.getElementById('ubicacion').value;
+
+            if (!modelo || !nombre || isNaN(cantidad) || cantidad<1) {
+                alert('Por favor, completa todos los campos correctamente.');
+                return;
+            }
+
+            stock.push({modelo, nombre, cantidad, ubicacion});
+            guardarStock();
+            renderizarStock();
+
+            document.getElementById('modelo').value='';
+            document.getElementById(nombre).value='';
+            document.getElementById('cantidad').value='';
+        }
+
+        function registrarVenta() {
+            const index=parseInt(document.getElementById('modeloVenta').value);
+            const cantidadVendida=parseInt(document.getElementById('cantidadVenta').value);
+
+            if (isNaN(cantidadVendida) || cantidadVendida<1){
+                alert('Ingresa una cantidad valida para vender.');
+                return;
+            }
+
+            if (cantidadVendida>stock[index].cantidad){
+                alert('No hay suficiente stock para esta venta.');
+                return;
+            }
+
+            stock[index].cantidad-=cantidadVendida;
+            guardarStock();
+            renderizarStock();
+
+            document.getElementById('cantidadVenta').value='';
+        }
+
+        renderizarStock();
+    </script>
+</body>
+</html>
