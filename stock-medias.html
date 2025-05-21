@@ -48,6 +48,13 @@
     <input type="number" id="cantidadVenta" placeholder="Cantidad vendida" min="1">
     <button onclick="registrarVenta()">Vender</button>
 
+    <h3>Filtrar por ubicacion:</h3>
+    <select id="filtroUbicacion" onchange="renderizarStock()">
+        <option value="todas">Todas</option>
+        <option value="repuestas">Solo repuestas</option>
+        <option value="stock">Solo stock, sin las repuestas</option>
+    </select>
+
     <h2>Stock actual</h2>
     <table>
         <thead>
@@ -61,6 +68,22 @@
         <tbody id="tablaStock"></tbody>
     </table>
 
+    <h2>Ventas Realizadas</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Modelo</th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+            </tr>
+        </thead>
+        <tbody id="tablaVentas"></tbody>
+    </table>
+
+    <h3>Exportar Datos</h3>
+    <button onclick="exportarCSV('stock')">Exportar stock</button>
+    <button onclick="exportarCSV('ventas')">Exportar Ventas</button>
+
     <script>
         let stock=JSON.parse(localStorage.getItem('stock')) || [];
 
@@ -68,13 +91,23 @@
             localStorage.setItem('stock', JSON.stringify(stock));
         }
 
+        let ventas=JSON.parse(localStorage.getItem('ventas')) || [];
+
+        function guardarVentas(){
+            localStorage.setItem('ventas', JSON.stringify(ventas));
+        }
+
         function renderizarStock() {
             const tabla=document.getElementById('tablaStock');
             const selectVenta=document.getElementById('modeloVenta');
+            const filtro=document.getElementById('filtroUbicacion').value;
+            
             tabla.innerHTML='';
             selectVenta.innerHTML='';
 
             stock.forEach((item, index) => {
+                if(filtro !== 'todas' && item.ubication !==filtro) return;
+
                 const fila= `
                     <tr>
                         <td>${item.modelo}</td>
@@ -128,13 +161,63 @@
             }
 
             stock[index].cantidad-=cantidadVendida;
+
+            const venta={
+                modelo:stock[index].modelo,
+                nombre:stock[index].nombre,
+                cantidad:cantidad[index].cantidad
+            };
+            ventas.push(venta);
             guardarStock();
+            guardarVentas();
             renderizarStock();
+            renderizarVentas();
 
             document.getElementById('cantidadVenta').value='';
         }
 
+        function renderizarVentas(){
+            const tabla=document.getElementById('tablaVentas');
+            tabla.innerHTML='';
+
+            ventas.forEach(venta=>{
+                const fila= `
+                    <tr>
+                        <td>${venta.modelo}</td>
+                        <td>${venta.nombre}</td>
+                        <td>${venta.cantidad}</td>
+                    </tr>`;
+                tabla.innerHTML +=fila;
+            });
+        }
+
         renderizarStock();
+        renderizarVentas();
+
+        function exportarCSV(tipo) {
+            let datos = [];
+            let encabezados = [];
+
+            if (tipo === 'stock') {
+                encabezados = ['Modelo', 'Nombre', 'Cantidad', 'Ubicación'];
+                datos = stock.map(item => [item.modelo, item.nombre, item.cantidad, item.ubicacion]);
+            } else if (tipo === 'ventas') {
+                encabezados = ['Modelo', 'Nombre', 'Cantidad', 'Fecha'];
+                datos = ventas.map(venta => [venta.modelo, venta.nombre, venta.cantidad, venta.fecha]);
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8," + [encabezados, ...datos]
+                .map(e => e.join(","))
+                .join("\n");
+
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", `${tipo}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
     </script>
 </body>
 </html>
