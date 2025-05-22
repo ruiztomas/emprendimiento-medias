@@ -19,7 +19,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15pxM
+            margin-top: 15px;
         }
         th, td {
             border: 1px solid #ccc;
@@ -34,7 +34,12 @@
 <body>
 
     <h2>Agregar modelo de Media</h2>
-    <input type="text" id="modelo" placeholder="Modelo">
+    <select id="modelo">
+        <option value="">Seleccionar modelo</option>
+        <option value="Soquete">Soquete</option>
+        <option value="Soquete niño">Soquete niño</option>
+        <option value="3/4">3/4</option>
+    </select>
     <input type="text" id="nombre" placeholder="Nombre">
     <input type="number" id="cantidad" placeholder="Cantidad" min="1">
     <select id="ubicacion">
@@ -44,7 +49,9 @@
     <button onclick="agregarMedia()">Agregar al stock</button>
 
     <h2>Registrar venta</h2>
-    <select id="modeloVenta"></select>
+    <select id="modeloVenta">
+        <option value="">Seleccionar media</option>
+    </select>
     <input type="number" id="cantidadVenta" placeholder="Cantidad vendida" min="1">
     <button onclick="registrarVenta()">Vender</button>
 
@@ -70,16 +77,36 @@
     </table>
 
     <h2>Ventas Realizadas</h2>
+    <label for="filtroModeloVenta">Filtrar por modelo:</label>
+    <select id="filtroModeloVenta" onchange="renderizarVentas()">
+        <option value="todos">Todos</option>
+        <option value="Soquete">Soquete</option>
+        <option value="Soquete niño">Soquete niño</option>
+        <option value="3/4">3/4</option>
+    </select>
+
     <table>
         <thead>
             <tr>
                 <th>Modelo</th>
                 <th>Nombre</th>
                 <th>Cantidad</th>
+                <th>Eliminar</th>
             </tr>
         </thead>
         <tbody id="tablaVentas"></tbody>
     </table>
+
+    <h3>Totales de Ventas</h3>
+    <label for="filtroTotal">Ver total de:</label>
+    <select id="filtroTotal" onchange="mostrarTotalVentas()">
+        <option value="todos">Todos los modelos</option>
+        <option value="Soquete">Soquete</option>
+        <option value="Soquete niño">Soquete niño</option>
+        <option value="3/4">3/4</option>
+    </select>
+
+    <p id="totalVentasTexto"><strong>Total vendido:</strong>$0</p>
 
     <h3>Exportar Datos</h3>
     <button onclick="exportarCSV('stock')">Exportar stock</button>
@@ -104,10 +131,10 @@
             const filtro=document.getElementById('filtroUbicacion').value;
             
             tabla.innerHTML='';
-            selectVenta.innerHTML='';
+            selectVenta.innerHTML='<option value="">Seleccionar media</option>';
 
             stock.forEach((item, index) => {
-                if(filtro !== 'todas' && item.ubication !==filtro) return;
+                if(filtro !== 'todas' && item.ubicacion !==filtro) return;
 
                 const fila= `
                     <tr>
@@ -122,7 +149,7 @@
                 if (item.cantidad > 0){
                     const opcion=document.createElement('option');
                     opcion.value=index;
-                    opcion.textContent=`${item.color})`;
+                    opcion.textContent=`${item.nombre}`;
                     selectVenta.appendChild(opcion);
                 }
             });
@@ -142,17 +169,24 @@
             const cantidad=parseInt(document.getElementById('cantidad').value);
             const ubicacion=document.getElementById('ubicacion').value;
 
-            if (!modelo || !nombre || isNaN(cantidad) || cantidad<1) {
+            if (modelo==='' || !nombre || isNaN(cantidad) || cantidad<1) {
                 alert('Por favor, completa todos los campos correctamente.');
                 return;
             }
 
-            stock.push({modelo, nombre, cantidad, ubicacion});
+            let precio=0;
+            if (modelo==="Soquete" || modelo==="Soquete niño"){
+                precio=1500;
+            } else if(modelo==="3/4"){
+                precio=2000;
+            }
+
+            stock.push({modelo, nombre, cantidad, ubicacion, precio});
             guardarStock();
             renderizarStock();
 
             document.getElementById('modelo').value='';
-            document.getElementById(nombre).value='';
+            document.getElementById('nombre').value='';
             document.getElementById('cantidad').value='';
         }
 
@@ -175,30 +209,37 @@
             const venta={
                 modelo:stock[index].modelo,
                 nombre:stock[index].nombre,
-                cantidad:cantidad[index].cantidad
+                cantidad:cantidadVendida
             };
             ventas.push(venta);
             guardarStock();
             guardarVentas();
             renderizarStock();
             renderizarVentas();
+            mostrarTotalVentas();
 
             document.getElementById('cantidadVenta').value='';
+            document.getElementById('modeloVenta').value='';
         }
 
         function renderizarVentas(){
             const tabla=document.getElementById('tablaVentas');
+            const filtro=document.getElementById('filtroModeloVenta').value;
             tabla.innerHTML='';
 
-            ventas.forEach(venta=>{
-                const fila= `
-                    <tr>
-                        <td>${venta.modelo}</td>
-                        <td>${venta.nombre}</td>
-                        <td>${venta.cantidad}</td>
-                    </tr>`;
-                tabla.innerHTML +=fila;
+            ventas.forEach((venta, index)=>{
+                if (filtro==='todos' || venta.modelo===filtro){
+                    const fila= `
+                        <tr>
+                            <td>${venta.modelo}</td>
+                            <td>${venta.nombre}</td>
+                            <td>${venta.cantidad}</td>
+                            <td><button onclick="eliminarVenta(${index})">🗑️ Eliminar</button></td>
+                        </tr>`;
+                    tabla.innerHTML +=fila;
+                }
             });
+            mostrarTotalVentas();
         }
 
         renderizarStock();
@@ -212,8 +253,8 @@
                 encabezados = ['Modelo', 'Nombre', 'Cantidad', 'Ubicación'];
                 datos = stock.map(item => [item.modelo, item.nombre, item.cantidad, item.ubicacion]);
             } else if (tipo === 'ventas') {
-                encabezados = ['Modelo', 'Nombre', 'Cantidad', 'Fecha'];
-                datos = ventas.map(venta => [venta.modelo, venta.nombre, venta.cantidad, venta.fecha]);
+                encabezados = ['Modelo', 'Nombre', 'Cantidad'];
+                datos = ventas.map(venta => [venta.modelo, venta.nombre, venta.cantidad]);
             }
 
             let csvContent = "data:text/csv;charset=utf-8," + [encabezados, ...datos]
@@ -226,6 +267,31 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        function mostrarTotalVentas(){
+            const filtro=document.getElementById('filtroTotal').value;
+            let total=0;
+
+            ventas.forEach(v=>{
+                if (filtro==='todos' || v.modelo===filtro){
+                    if (v.modelo==='Soquete' || v.modelo==='Soquete niño'){
+                        total +=v.cantidad*1500;
+                    }else if (v.modelo==='3/4'){
+                        total +=v.cantidad*2000;
+                    }
+                }
+            });
+
+            document.getElementById('totalVentasTexto').textContent= `Total vendido${filtro !== 'todos' ? ' (' + filtro + ')' : ''}: $${total}`;
+        }
+
+        function eliminarVenta(index){
+            if(confirm("¿Estas seguro de que queres eliminar esta venta?")){
+                ventas.splice(index, 1);
+                guardarVentas();
+                renderizarVentas();
+            }
         }
 
     </script>
