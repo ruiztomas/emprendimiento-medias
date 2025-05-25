@@ -52,7 +52,7 @@ function renderizarStock() {
     });
 }
 
-function moverARepuestas(index){
+async function moverARepuestas(index){
     const inputCantidad=document.getElementById(`cantidadRepuesta-${index}`);
     const cantidadMover=parseInt(inputCantidad.value);
 
@@ -60,41 +60,47 @@ function moverARepuestas(index){
         alert('Ingrese una cantidad valida para mover a repuestas.');
         return;
     }
-    if (cantidadMover>stock[index].cantidad){
+
+    const media=stock[index];
+
+    if (cantidadMover>media.cantidad){
         alert('No hay suficiente stock para remover esa cantidad.');
         return;
     }
-    const media=stock[index];
-    const existente=stock.find(m=>
-        m.nombre===media.nombre&&
-        m.modelo===media.modelo &&
-        m.ubicacion==='repuestas'
-    );
 
-    stock[index].cantidad-=cantidadMover;
+    const stockRef=db.collection("stock").doc(media.id);
+    await stockRef.update({
+        cantidad: media.cantidad - cantidadMover
+    });
 
-    if (existente){
-        existente.cantidad+=cantidadMover;
+    const existenteSnapshot=await db.collection("stock")
+        .where("nombre", "==", media.nombre)
+        .where("modelo", "==", media.modelo)
+        .where("ubicacion", "==", "repuestas")
+        .get();
+    
+    if (!existenteSnapshot.empty){
+        const doc=existenteSnapshot.docs[0];
+        await db.collection("stock").doc(doc.id).update({
+            cantidad: doc.data().cantidad + cantidadMover
+        });
     } else {
-        stock.push({
+        await db.collection("stock").add({
             modelo: media.modelo,
             nombre: media.nombre,
             cantidad: cantidadMover,
-            ubicacion: 'repuestas',
+            ubicacion: "repuestas",
             precio: media.precio
         });
     }
-    guardarStock();
-    renderizarStock();
+    cargarDatos();
 }
 
 function eliminarMedia(index){
-    if (confirm("¿Estas seguro de que queres eliminar esta media del stock?")){
-        stock.splice(index,1);
-        guardarStock();
-        sincronizarConSheets('stock');
-        renderizarStock();
-    }
+    const id=stock[index].id;
+    db.collection("stock").doc(id).delete().then(()=>{
+        cargarDatos();
+    });
 }
 
 function agregarMedia(){
@@ -130,29 +136,26 @@ function registrarVenta() {
         return;
     }
 
-    if (cantidadVendida>stock[index].cantidad){
-        alert('No hay suficiente stock para esta venta.');
+    const item=stock[index];
+    if (cantidadVendida > item.cantidad){
+        alert('No hay suficiente stock.');
         return;
     }
 
-    stock[index].cantidad-=cantidadVendida;
+    const stockRef=db.collection("stock").doc(item.id);
+    stockRef.update({
+        cantidad: item.cantidad - cantidadVendida
+    });
 
-    const venta={
-        modelo:stock[index].modelo,
-        nombre:stock[index].nombre,
-        cantidad:cantidadVendida
-    };
-    ventas.push(venta);
-    guardarStock();
-    guardarVentas();
-    sincronizarConSheets('stock');
-    sincronizarConSheets('ventas');
-    renderizarStock();
-    renderizarVentas();
-    mostrarTotalVentas();
+    db.collection("ventas").add({
+        modelo: item.modelo,
+        nombre: item.nombre,
+        cantidad: cantidadVendida
+    });
 
     document.getElementById('cantidadVenta').value='';
     document.getElementById('modeloVenta').value='';
+    setTimeout(cargarDatos, 500);
 }
 
 function renderizarVentas(){
@@ -174,9 +177,6 @@ function renderizarVentas(){
     });
     mostrarTotalVentas();
 }
-
-renderizarStock();
-renderizarVentas();
 
 function exportarCSV(tipo) {
     let datos = [];
@@ -220,16 +220,21 @@ function mostrarTotalVentas(){
 }
 
 function eliminarVenta(index){
-    if(confirm("¿Estas seguro de que queres eliminar esta venta?")){
-        ventas.splice(index, 1);
-        guardarVentas();
-        sincronizarConSheets('ventas');
-        renderizarVentas();
-    }
+    const id=ventas[index].id;
+    db.collection("ventas").doc(id).delete().then(()=>{
+        cargarDatos();
+    });
 }
 
 function cambiarUbicacion(index){
-    stock[index].ubicacion=stock[index].ubicacion==='stock' ? 'repuestas' : 'stock';
-    guardarStock();
-    renderizarStock();
+    const item=stock[index];
+    const nuevaUbicacion=item.ubicacion==='stock' ? 'repuestas' : 'stock';
+
+    db.collection("stock").doc(item.id).update({
+        ubicacion: nuevaUbicacion
+    }).then(()=>{
+        cargarDatos();
+    });
 }
+
+cargarDatos();
