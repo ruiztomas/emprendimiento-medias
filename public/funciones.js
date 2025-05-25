@@ -25,11 +25,11 @@ function renderizarStock() {
 
         const fila=document.createElement('tr');
         fila.innerHTML=`
-            <td>${item.modelo}</td>
-            <td>${item.nombre}</td>
-            <td>${item.cantidad > 0 ? item.cantidad: '<span class="vendido">Agotado</span>'}</td>
-            <td>${item.ubicacion}</td>
-            <td>
+            <td data-label="Modelo">${item.modelo}</td>
+            <td data-label="Nombre">${item.nombre}</td>
+            <td data-label="Cantidad">${item.cantidad > 0 ? item.cantidad: '<span class="vendido">Agotado</span>'}</td>
+            <td data-label="Ubicacion">${item.ubicacion}</td>
+            <td data-label="Eliminar">
                 <button onclick="eliminarMedia(${index})">🗑️ Eliminar</button>
             </td>
             <td>
