@@ -21,32 +21,35 @@ function renderizarStock() {
     selectVenta.innerHTML='<option value="">Seleccionar media</option>';
 
     stock.forEach((item, index) => {
-        if(filtro !== 'todas' && item.ubicacion !==filtro) return;
+        let mostrar=true;
+        if (filtro==='repuestas')mostrar=item.esRepuesta===true;
+        else if (filtro==='stock')mostrar=item.esRepuesta !==true;
+        if (!mostrar) return;
 
         const fila=document.createElement('tr');
         fila.innerHTML=`
             <td data-label="Modelo">${item.modelo}</td>
             <td data-label="Nombre">${item.nombre}</td>
             <td data-label="Cantidad">${item.cantidad > 0 ? item.cantidad: '<span class="vendido">Agotado</span>'}</td>
-            <td data-label="Ubicacion">${item.ubicacion}</td>
+            <td data-label="Ubicacion">${item.esRepuesta?'Repuesta':'Stock'}</td>
             <td data-label="Eliminar">
                 <button onclick="eliminarMedia(${index})">🗑️ Eliminar</button>
             </td>
             <td>
                 ${
-                    item.ubicacion === 'stock' && item.cantidad > 0
+                    !item.esRepuesta && item.cantidad > 0
                     ? `<input type="number" id="cantidadRepuesta-${index}" min="1" max="${item.cantidad}" value="1" style="width: 60px;">
-                        <button onclick="moverARepuestas(${index})">🔁 A repuestas</button>`
-                    : item.ubicacion === 'repuestas' ? '-' : ''
+                        <button onclick="moverARepuestas(${index})">🔁 Repuesta.</button>`
+                    : '-'
                 }    
             </td>
         `;
         tabla.appendChild(fila);
                 
-        if (item.cantidad > 0 && item.ubicacion === 'stock'){
+        if (item.cantidad > 0){
             const opcion=document.createElement('option');
             opcion.value=index;
-            opcion.textContent=`${item.nombre}`;
+            opcion.textContent=`${item.nombre}(${item.esRepuesta?'Repuesta':'Stock'})`;
             selectVenta.appendChild(opcion);
         }
     });
@@ -68,17 +71,16 @@ async function moverARepuestas(index){
         return;
     }
 
-    const stockRef=db.collection("stock").doc(media.id);
-    await stockRef.update({
+    await db.collection("stock").doc(media.id).update({
         cantidad: media.cantidad - cantidadMover
     });
 
-    const existenteSnapshot=await db.collection("stock")
+    const existenteSnapshot= await db.collection("stock")
         .where("nombre", "==", media.nombre)
         .where("modelo", "==", media.modelo)
-        .where("ubicacion", "==", "repuestas")
+        .where("esRepuesta", "==", true)
         .get();
-    
+
     if (!existenteSnapshot.empty){
         const doc=existenteSnapshot.docs[0];
         await db.collection("stock").doc(doc.id).update({
@@ -89,10 +91,12 @@ async function moverARepuestas(index){
             modelo: media.modelo,
             nombre: media.nombre,
             cantidad: cantidadMover,
-            ubicacion: "repuestas",
+            ubicacion: "stock",
+            esRepuesta: true,
             precio: media.precio
         });
     }
+
     cargarDatos();
 }
 
@@ -155,7 +159,8 @@ function registrarVenta() {
 
     document.getElementById('cantidadVenta').value='';
     document.getElementById('modeloVenta').value='';
-    setTimeout(cargarDatos, 500);
+    
+    cargarDatos();
 }
 
 function renderizarVentas(){
