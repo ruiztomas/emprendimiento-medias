@@ -34,18 +34,16 @@ function renderizarStock() {
 
         const fila=document.createElement('tr');
         fila.innerHTML=`
-            <td data-label="Modelo">${item.modelo}</td>
             <td data-label="Nombre">${item.nombre}</td>
             <td data-label="Cantidad">${item.cantidad > 0 ? item.cantidad: '<span class="vendido">Agotado</span>'}</td>
-            <td data-label="Ubicacion">${item.esRepuesta?'Repuesta':'Stock'}</td>
             <td data-label="Eliminar">
-                <button onclick="eliminarMedia(${index})">🗑️ Eliminar</button>
+                <button onclick="eliminarMediaPorId('${item.id}')">🗑️ Eliminar</button>
             </td>
             <td>
                 ${
                     !item.esRepuesta && item.cantidad > 0
                     ? `<input type="number" id="cantidadRepuesta-${index}" min="1" max="${item.cantidad}" value="1" style="width: 60px;">
-                        <button onclick="moverARepuestas(${index})">🔁 Repuesta.</button>`
+                        <button onclick="moverARepuestas(${item.id})">🔁 Repuesta.</button>`
                     : '-'
                 }    
             </td>
@@ -60,16 +58,20 @@ function renderizarStock() {
     });
 }
 
-async function moverARepuestas(index){
-    const inputCantidad=document.getElementById(`cantidadRepuesta-${index}`);
+async function moverARepuestas(id){
+    const media=stock.find(item=>item.id===id);
+    if (!media){
+        alert('Media no encontrada.');
+        return;
+    }
+    
+    const inputCantidad=document.getElementById(`cantidadRepuesta-${id}`);
     const cantidadMover=parseInt(inputCantidad.value);
 
     if (isNaN(cantidadMover) || cantidadMover<1){
-        alert('Ingrese una cantidad valida para mover a repuestas.');
+        alert('Ingrese una cantidad valida para mover a repuestas');
         return;
     }
-
-    const media=stock[index];
 
     if (cantidadMover>media.cantidad){
         alert('No hay suficiente stock para remover esa cantidad.');
@@ -105,8 +107,7 @@ async function moverARepuestas(index){
     cargarDatos();
 }
 
-function eliminarMedia(index){
-    const id=stock[index].id;
+function eliminarMediaPorId(id){
     db.collection("stock").doc(id).delete().then(()=>{
         cargarDatos();
     });
@@ -136,7 +137,7 @@ function agregarMedia(){
     document.getElementById('cantidad').value='';
 }
 
-function registrarVenta() {
+async function registrarVenta() {
     const nombreSeleccionado=document.getElementById('modeloVenta').value.trim();
     const cantidadVendida=parseInt(document.getElementById('cantidadVenta').value);
 
@@ -146,7 +147,7 @@ function registrarVenta() {
     }
 
     const index=stock.findIndex(item=>{
-        const nombreConEstado=item.nombre + (item.esRepuesta ? ' (Repuesta)': ' (Stock)');
+        const nombreConEstado=item.nombre + (item.esRepuesta ? ' (Repuesta)': '');
         return nombreConEstado.toLowerCase()===nombreSeleccionado.toLowerCase();
     });
 
@@ -155,23 +156,23 @@ function registrarVenta() {
         return;
     }
 
-    if(stock[index].cantidad<cantidadVenta){
+    const media=stock.findIndex();
+
+    if(media.cantidad < cantidadVendida){
         alert('No hay suficiente stock.');
         return;
     }
-
-    stock[index].cantidad-=cantidadVenta;
-
-    ventas.push({
-        modelo: stock[index].modelo,
-        nombre: stock[index].nombre,
-        cantidad: cantidadVenta
+    
+    await db.collection("stock").doc(media.id).update({
+        cantidad:media.cantidad-cantidadVendida
     });
 
-    guardarDatos();
-    renderizarStock();
-    renderizarVentas();
-    mostrarTotalVentas();
+    await db.collection("ventas").add({
+        modelo: media.modelo,
+        nombre: media.nombre,
+        cantidad: cantidadVendida    
+    });
+    cargarDatos();
 }
 
 function renderizarVentas(){
@@ -183,11 +184,10 @@ function renderizarVentas(){
         if (filtro==='todos' || venta.modelo===filtro){
             const fila= `
                 <tr>
-                    <td data-label="Modelo">${venta.modelo}</td>
                     <td data-label="Nombre">${venta.nombre}</td>
                     <td data-label="Cantidad">${venta.cantidad}</td>
                     <td data-label="Eliminar">
-                        <button onclick="eliminarVenta(${index})">🗑️ Eliminar</button>
+                        <button onclick="eliminarVentaPorId('${venta.id}')">🗑️ Eliminar</button>
                     </td>
                 </tr>`;
             tabla.innerHTML +=fila;
@@ -237,8 +237,7 @@ function mostrarTotalVentas(){
     document.getElementById('totalVentasTexto').textContent= `Total vendido${filtro !== 'todos' ? ' (' + filtro + ')' : ''}: $${total}`;
 }
 
-function eliminarVenta(index){
-    const id=ventas[index].id;
+function eliminarVentaPorId(id){
     db.collection("ventas").doc(id).delete().then(()=>{
         cargarDatos();
     });
