@@ -14,16 +14,22 @@ async function cargarDatos() {
 
 function renderizarStock() {
     const tabla=document.getElementById('tablaStock');
-    const selectVenta=document.getElementById('modeloVenta');
-    const filtro=document.getElementById('filtroUbicacion').value;
+    const dataListVenta=document.getElementById('listaMedias');
+    const filtroUbicacion=document.getElementById('filtroUbicacion').value;
+    const filtroModelo=document.getElementById('filtroModeloStock').value;
             
     tabla.innerHTML='';
-    selectVenta.innerHTML='<option value="">Seleccionar media</option>';
+    dataListVenta.innerHTML='';
 
-    stock.forEach((item, index) => {
+    const stockOrdenado = [...stock].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+
+    stockOrdenado.forEach((item, index) => {
         let mostrar=true;
-        if (filtro==='repuestas')mostrar=item.esRepuesta===true;
-        else if (filtro==='stock')mostrar=item.esRepuesta !==true;
+        if (filtroUbicacion==='repuestas')mostrar=item.esRepuesta===true;
+        else if (filtroUbicacion==='stock')mostrar=item.esRepuesta!==true;
+        if (mostrar && filtroModelo!=='todos'){
+            mostrar=item.modelo===filtroModelo;
+        }
         if (!mostrar) return;
 
         const fila=document.createElement('tr');
@@ -48,9 +54,8 @@ function renderizarStock() {
                 
         if (item.cantidad > 0){
             const opcion=document.createElement('option');
-            opcion.value=index;
-            opcion.textContent=`${item.nombre}(${item.esRepuesta?'Repuesta':'Stock'})`;
-            selectVenta.appendChild(opcion);
+            opcion.value=item.nombre + (item.esRepuesta? ' (Repuesta)':'');
+            dataListVenta.appendChild(opcion);
         }
     });
 }
@@ -132,35 +137,41 @@ function agregarMedia(){
 }
 
 function registrarVenta() {
-    const index=parseInt(document.getElementById('modeloVenta').value);
+    const nombreSeleccionado=document.getElementById('modeloVenta').value.trim();
     const cantidadVendida=parseInt(document.getElementById('cantidadVenta').value);
 
-    if (isNaN(cantidadVendida) || cantidadVendida<1){
-        alert('Ingresa una cantidad valida para vender.');
+    if (!nombreSeleccionado || isNaN(cantidadVendida) || cantidadVendida <=0){
+        alert('Selecciona una media valida y cantidad.');
         return;
     }
 
-    const item=stock[index];
-    if (cantidadVendida > item.cantidad){
+    const index=stock.findIndex(item=>{
+        const nombreConEstado=item.nombre + (item.esRepuesta ? ' (Repuesta)': ' (Stock)');
+        return nombreConEstado.toLowerCase()===nombreSeleccionado.toLowerCase();
+    });
+
+    if (index===-1){
+        alert('Media no encontrada.');
+        return;
+    }
+
+    if(stock[index].cantidad<cantidadVenta){
         alert('No hay suficiente stock.');
         return;
     }
 
-    const stockRef=db.collection("stock").doc(item.id);
-    stockRef.update({
-        cantidad: item.cantidad - cantidadVendida
+    stock[index].cantidad-=cantidadVenta;
+
+    ventas.push({
+        modelo: stock[index].modelo,
+        nombre: stock[index].nombre,
+        cantidad: cantidadVenta
     });
 
-    db.collection("ventas").add({
-        modelo: item.modelo,
-        nombre: item.nombre,
-        cantidad: cantidadVendida
-    });
-
-    document.getElementById('cantidadVenta').value='';
-    document.getElementById('modeloVenta').value='';
-    
-    cargarDatos();
+    guardarDatos();
+    renderizarStock();
+    renderizarVentas();
+    mostrarTotalVentas();
 }
 
 function renderizarVentas(){
@@ -172,10 +183,12 @@ function renderizarVentas(){
         if (filtro==='todos' || venta.modelo===filtro){
             const fila= `
                 <tr>
-                    <td>${venta.modelo}</td>
-                    <td>${venta.nombre}</td>
-                    <td>${venta.cantidad}</td>
-                    <td><button onclick="eliminarVenta(${index})">🗑️ Eliminar</button></td>
+                    <td data-label="Modelo">${venta.modelo}</td>
+                    <td data-label="Nombre">${venta.nombre}</td>
+                    <td data-label="Cantidad">${venta.cantidad}</td>
+                    <td data-label="Eliminar">
+                        <button onclick="eliminarVenta(${index})">🗑️ Eliminar</button>
+                    </td>
                 </tr>`;
             tabla.innerHTML +=fila;
         }

@@ -3,21 +3,46 @@ body {
     background-color: #f9f9f9;
     color:#333;
 }
-h2{
+h2, h3{
+    text-align: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color:#2c3e50;
+    margin-top: 30px;
+    margin-bottom: 15px;
+}
+h2{
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+h3{
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #34495e;
+}
+label{
+    display: block;
+    text-align: center;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 button{
+    display: block;
     background-color: #3445db;
     color: white;
     border: none;
-    margin: 5px 0;
-    padding: 8px 12px;
-    border-radius: 5px;
+    margin: 10px auto;
+    padding: 8px 5px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    font-weight: 600;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: background-color 0.3s ease;
 }
 button:hover{
-    background-color: #2980b9;
+    background-color: #2980bd;
 }
 button.eliminar{
     background-color: #e74c3c;
@@ -47,17 +72,50 @@ th{
     font-weight: bold;
 }
 input, select {
-    padding: 8px;
+    display: block;
+    margin: 0 auto 15px auto;
+    padding: 6px 10px;
+    font-size: 1rem;
     border: 1px solid #ccc;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    width: 100%;
-    max-width: 300px;
+    border-radius: 5px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    width: 250px;
+    box-sizing: border-box;
 }
 .container {
     max-width: 1000px;
     margin: auto;
     padding: 20px;
+}
+.formulario, .formulario-venta, .formulario-exportar{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 20px auto;
+    max-width: 1000px;
+}
+.formulario button,
+.formulario-venta button,
+.formulario-exportar button{
+    margin: 0;
+}
+select#filtroUbicacion,
+select#filtroModeloVenta,
+select#filtroTotal{
+    display: block;
+    margin: 10px auto;
+    width: fit-content;
+}
+.filtros-stock{
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+.filtros-stock .filtro{
+    text-align: center;
 }
 @media (max-width: 600px){
     table, thead, tbody, th, td, tr {
