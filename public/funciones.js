@@ -43,9 +43,13 @@ function renderizarStock() {
                 ${
                     !item.esRepuesta && item.cantidad > 0
                     ? `<input type="number" id="cantidadRepuesta-${index}" min="1" max="${item.cantidad}" value="1" style="width: 60px;">
-                        <button onclick="moverARepuestas(${item.id})">🔁 Repuesta.</button>`
+                        <button onclick="moverARepuestas('${item.id}')">🔁 Repuesta.</button>`
                     : '-'
                 }    
+            </td>
+            <td>
+                <input type="number" id="agregarCantidad-${item.id}" min="1" value="1" style="width: 60px;">
+                <button onclick="agregarCantidadStock('${item.id}')">+ Sumar</button>
             </td>
         `;
         tabla.appendChild(fila);
@@ -56,6 +60,28 @@ function renderizarStock() {
             dataListVenta.appendChild(opcion);
         }
     });
+}
+
+async function agregarCantidadStock(id) {
+    const media=stock.find(item=>item.id===id);
+    if (!media){
+        alert("Media no encontrada.");
+        return;
+    }
+
+    const input=document.getElementById(`agregarCantidad-${id}`);
+    const cantidadAgregar=parseInt(input.value);
+
+    if(isNaN(cantidadAgregar) || cantidadAgregar<1){
+        alert("Ingrese una cantidad valida para agregar.");
+        return;
+    }
+
+    await db.collection("stock").doc(id).update({
+        cantidad: media.cantidad+cantidadAgregar
+    });
+
+    cargarDatos();
 }
 
 async function moverARepuestas(id){
@@ -156,7 +182,7 @@ async function registrarVenta() {
         return;
     }
 
-    const media=stock.findIndex();
+    const media=stock[index];
 
     if(media.cantidad < cantidadVendida){
         alert('No hay suficiente stock.');
