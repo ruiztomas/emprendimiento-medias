@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ventas - Tienda Lunoso</title>
+    <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+    <header>
+        <div class="logo">Tienda Lunoso</div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="agregar.html">Agregar Medias</a></li>
+                <li><a href="stock.html">Stock</a></li>
+                <li><a href="ventas.html">Ventas</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section>
+        <h2>Registrar ventas</h2>
+        <div class="formulario-venta">
+            <input list="listaMedias" id="modeloVenta" placeholder="Escribe para buscar media...">
+            <datalist id="listaMedias"></datalist>
+            <input type="number" id="cantidadVenta" placeholder="Cantidad vendida" min="1">
+            <button onclick="registrarVenta()">Vender</button>
+        </div>
+    </section>
+
+    <section>
+        <h2>Ventas Realizadas</h2>
+
+        <label for="filtroModeloVenta">Filtrar por modelo:</label>
+        <select id="filtroModeloVenta" onchange="renderizarVentas()">
+            <option value="todos">Todos</option>
+            <option value="Soquete">Soquete</option>
+            <option value="Soquete niño">Soquete niño</option>
+            <option value="3/4">3/4</option>
+        </select>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Cantidad</th>
+                    <th>Eliminar</th>
+                </tr>
+            </thead>
+            <tbody id="tablaVentas"></tbody>
+        </table>
+
+        <h3>Totales de Ventas</h3>
+        <label for="filtroTotal">Ver total de:</label>
+        <select id="filtroTotal" onchange="mostrarTotalVentas()">
+            <option value="todos">Todos los modelos</option>
+            <option value="Soquete">Soquete</option>
+            <option value="Soquete niño">Soquete niño</option>
+            <option value="3/4">3/4</option>
+        </select>
+        
+        <p id="totalVentasTexto"><strong>Total vendido:</strong>$0</p>
+
+        <h3>Exportar datos</h3>
+        <div class="formulario-exportar">
+            <button onclick="exportarCSV('stock')">Exportar stock</button>
+            <button onclick="exportarCSV('ventas')">Exportar ventas</button>
+        </div>
+    </section>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/ventas.js"></script>
+</body>
+</html>

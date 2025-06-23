@@ -2,124 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Control de Stock - Medias</title>
-    <link rel="stylesheet" href="estilo.css">
+    <title>Inicio - Tienda Lunoso</title>
+    <link rel="stylesheet" href="css/estilo.css">
 </head>
 <body>
+    <header>
+        <div class="logo">Tienda Lunoso</div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="agregar.html">Agregar Medias</a></li>
+                <li><a href="stock.html">Stock</a></li>
+                <li><a href="ventas.html">Ventas</a></li>
+            </ul>
+        </nav>
+    </header>
 
-    <h2>Agregar modelo de Media</h2>
-    <div class="formulario">
-        <select id="modelo">
-            <option value="">Seleccionar modelo</option>
-            <option value="Soquete">Soquete</option>
-            <option value="Soquete niño">Soquete niño</option>
-            <option value="3/4">3/4</option>
-        </select>
-        <input type="text" id="nombre" placeholder="Nombre">
-        <input type="number" id="cantidad" placeholder="Cantidad" min="1">
-
-        <button onclick="agregarMedia()">Agregar al stock</button>
-    </div>
-
-    <h2>Registrar venta</h2>
-    <div class="formulario-venta">
-        <input list="listaMedias" id="modeloVenta" placeholder="Escribe para buscar media...">
-        <datalist id="listaMedias"></datalist>
-        <input type="number" id="cantidadVenta" placeholder="Cantidad vendida" min="1">
-        <button onclick="registrarVenta()">Vender</button>
-    </div>
-
-    <div class="container">
-        <h2>Stock actual</h2>
-
-        <div class="filtros-stock">
-            <div class="filtro">
-                <label for="filtroUbicacion">Filtrar por ubicacion:</label>
-                <select id="filtroUbicacion" onchange="renderizarStock()">
-                    <option value="todas">Todas</option>
-                    <option value="repuestas">Solo repuestas</option>
-                    <option value="stock">Solo stock, sin las repuestas</option>
-                </select>
-            </div>
-            <div class="filtro">
-                <label for="filtroModeloStock">Filtrar por modelo:</label>
-                <select id="filtroModeloStock" onchange="renderizarStock()">
-                    <option value="todos">Todos</option>
-                    <option value="Soquete">Soquetes</option>
-                    <option value="Soquete niño">Soquetes niños</option>
-                    <option value="3/4">3/4</option>
-                </select>
-            </div>
-        </div>      
-        <table>
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Cantidad</th>
-                    <th>Eliminar</th>
-                </tr>
-            </thead>
-            <tbody id="tablaStock"></tbody>
-        </table>
-    </div>
-
-    <div class="container">
-        <h2>Ventas Realizadas</h2>
-    
-        <label for="filtroModeloVenta">Filtrar por modelo:</label>
-        <select id="filtroModeloVenta" onchange="renderizarVentas()">
-            <option value="todos">Todos</option>
-            <option value="Soquete">Soquete</option>
-            <option value="Soquete niño">Soquete niño</option>
-            <option value="3/4">3/4</option>
-        </select>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Cantidad</th>
-                    <th>Eliminar</th>
-                </tr>
-            </thead>
-            <tbody id="tablaVentas"></tbody>
-        </table>
-
-        <h3>Totales de Ventas</h3>
-        <label for="filtroTotal">Ver total de:</label>
-        <select id="filtroTotal" onchange="mostrarTotalVentas()">
-            <option value="todos">Todos los modelos</option>
-            <option value="Soquete">Soquete</option>
-            <option value="Soquete niño">Soquete niño</option>
-            <option value="3/4">3/4</option>
-        </select>
-
-        <p id="totalVentasTexto"><strong>Total vendido:</strong>$0</p>
-
-        <h3>Exportar Datos</h3>
-        <div class="formulario-exportar">
-            <button onclick="exportarCSV('stock')">Exportar stock</button>
-            <button onclick="exportarCSV('ventas')">Exportar Ventas</button>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script>
-        const firebaseConfig={
-            apiKey: "AIzaSyBw9R8udu9eKary7uXCbEaM1Y4KgqQmJLI",
-            authDomain: "stock-medias.firebaseapp.com",
-            projectId: "stock-medias",
-            storageBucket: "stock-medias.firebasestorage.app",
-            messagingSenderId: "147450676635",
-            appId: "1:147450676635:web:ea031f4da2acfd7ede4d3e",
-            measurementId: "G-9TQHH4HN00"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const db=firebase.firestore();
-    </script>
-    <script src="funciones.js"></script>
+    <section class="portada">
+        <h1>Bienvenido a Tienda Lunoso</h1>
+        <p>Usar el menu para navegar entre las secciones.</p>
+    </section>
 </body>
 </html>
